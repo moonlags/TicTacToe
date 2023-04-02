@@ -1,8 +1,17 @@
 #include "Window.h"
+#include <gdiplus.h>
+#include <iostream>
+#include <string>
+
+HWND TextBox;
 
 Window::Window()
-	: m_hInstance(GetModuleHandle(nullptr))
+	: m_hInstance(GetModuleHandle(nullptr)),
+	inMenu(true)
 {
+	Gdiplus::GdiplusStartupInput gdiPlusStartupInput;
+	Gdiplus::GdiplusStartup(&gdiplusToken, &gdiPlusStartupInput, nullptr);
+
 	const wchar_t* CLASS_NAME = L"Tic Tac Toe Class";
 	WNDCLASS wndClass = {};
 	wndClass.lpszClassName = CLASS_NAME;
@@ -32,6 +41,7 @@ Window::Window()
 
 Window::~Window()
 {
+	Gdiplus::GdiplusShutdown(gdiplusToken);
 	const wchar_t* CLASS_NAME = L"Tic Tac Toe Class";
 	UnregisterClass(CLASS_NAME,m_hInstance);
 }
@@ -52,22 +62,31 @@ bool Window::ProcessMessages()
 	return true;
 }
 
-void Window::DrawMenu()
+void Window::Draw()
 {
-	RECT rect;
-	HFONT hFont1;
 	HDC wdc = GetWindowDC(m_hWnd);
-	GetClientRect(m_hWnd, &rect);
-	SetTextColor(wdc, 0xffffffff);
-	SetBkMode(wdc, TRANSPARENT);
-	rect.left = 0;
-	rect.top = 100;
-	hFont1 = CreateFont(72,0,0,0,0,false,false,false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE,TEXT("Tic Tac Toe"));
-	SelectObject(wdc, hFont1);
-	DrawText(wdc, L"Tic Tac Toe", -1, &rect, DT_SINGLELINE | DT_NOCLIP|DT_CENTER);
+	HFONT hFont1 = CreateFont(72, 0, 0, 0, 0, false, false, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE, TEXT("Tic Tac Toe"));
+	if (inMenu) {
+		RECT rect;
+		GetClientRect(m_hWnd, &rect);
+		SetTextColor(wdc, 0xffffffff);
+		SetBkMode(wdc, TRANSPARENT);
+		rect.left = 0;
+		rect.top = 100;
+		SelectObject(wdc, hFont1);
+		DrawText(wdc, L"Tic Tac Toe", -1, &rect, DT_SINGLELINE | DT_NOCLIP | DT_CENTER);
 
-	DeleteDC(wdc);
+		Gdiplus::Graphics graphics(wdc);
+		Gdiplus::Image image(L"image.png");
+		graphics.DrawImage(&image, Gdiplus::PointF(200.0f, 100.0f));
+	}
+	ReleaseDC(m_hWnd,wdc);
 	DeleteObject(hFont1);
+}
+
+void Window::DrawPlayField()
+{
+
 }
 
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -75,13 +94,26 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch(uMsg)
 	{
 	case WM_CREATE:
-		CreateWindow(TEXT("BUTTON"), TEXT("Join Game"), WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 400, 80, 20, hWnd, (HMENU)1, nullptr, nullptr);
+		CreateWindow(TEXT("BUTTON"), TEXT("Join Game"), WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 400, 100, 20, hWnd, (HMENU)1, nullptr, nullptr);
+		CreateWindow(TEXT("BUTTON"), TEXT("Create Game"), WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 370, 100, 20, hWnd, (HMENU)2, nullptr, nullptr);
+		TextBox = CreateWindow(L"EDIT",L"Game Code",WS_BORDER|WS_CHILD|WS_VISIBLE,10,430,100,20,hWnd,nullptr,nullptr,nullptr);
 		break;
 	case WM_COMMAND:
 		switch(LOWORD(wParam))
 		{
 		case 1:
-			
+			int stat;
+			char text[10];
+			stat = GetWindowTextA(TextBox,&text[0], 10);
+			std::cout << text << std::endl;
+			std::cout << stat << std::endl;
+			if (stat==0)
+			{
+				::MessageBox(hWnd, L"Error: Enter game code!", L"Error", MB_ICONERROR);
+			}
+			break;
+		case 2:
+
 			break;
 		}
 		break;

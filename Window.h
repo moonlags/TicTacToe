@@ -13,9 +13,12 @@ public:
 	~Window();
 
 	bool ProcessMessages();
-	void DrawMenu();
+	void Draw();
+	void DrawPlayField();
 private:
+	ULONG_PTR gdiplusToken;
 	HINSTANCE m_hInstance;
+	bool inMenu;
 	HWND m_hWnd;
 };
 

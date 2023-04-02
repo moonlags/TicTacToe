@@ -18,10 +18,7 @@ int main()
 			cout << "Closing Window" << endl;
 			running = false;
 		}
-		if (InMenu)
-		{
-			pWindow->DrawMenu();
-		}
+		pWindow->Draw();
 		Sleep(10);
 	}
 	delete pWindow;
